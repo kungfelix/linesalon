@@ -24,5 +24,5 @@ from linebot.models import (
 
 
 
-line_bot_api = LineBotApi('2/n0t/0MwQdeizWWKw/hE+bSlBDWt3JcfVPiSkt+lSFUJJQsdgT1b0/99tb2N69bGaCN8ELaMOlGv4yhA3yL5xrop+YM8nzVDmeLfYEnppxKz0/MGhMk3IkuSwXMV4FTeNSUYVM8Q+Ek5fSehKn/7wdB04t89/1O/w1cDnyilFU=')
-handler = WebhookHandler('61a79162dbaf371ae9160a8a9d5a66b3')
+line_bot_api = LineBotApi(' ')
+handler = WebhookHandler(' ')
