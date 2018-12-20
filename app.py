@@ -7,7 +7,7 @@ from about_us import about_us_event
 from location import location_event
 from contact import contact_event
 from appointment import appointment_event, appointment_datetime_event, appointment_completed_event
-from models.users import User
+from users import User
 
 app = Flask(__name__)
 
