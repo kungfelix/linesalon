@@ -1,20 +1,23 @@
 from flask import Flask, request, abort
 
-from linebot import (
-    LineBotApi, WebhookHandler
-)
-from linebot.exceptions import (
-    InvalidSignatureError
-)
-from linebot.models import (
-    MessageEvent, TextMessage, TextSendMessage, ImageSendMessage, StickerSendMessage
-)
+from urllib.parse import parse_qsl
+from line_bot_api import *
+from database import db_session, init_db
+from about_us import about_us_event
+from location import location_event
+from contact import contact_event
+from appointment import appointment_event, appointment_datetime_event, appointment_completed_event
+from models.users import User
 
 app = Flask(__name__)
 
-line_bot_api = LineBotApi('2/n0t/0MwQdeizWWKw/hE+bSlBDWt3JcfVPiSkt+lSFUJJQsdgT1b0/99tb2N69bGaCN8ELaMOlGv4yhA3yL5xrop+YM8nzVDmeLfYEnppxKz0/MGhMk3IkuSwXMV4FTeNSUYVM8Q+Ek5fSehKn/7wdB04t89/1O/w1cDnyilFU=')
-handler = WebhookHandler('61a79162dbaf371ae9160a8a9d5a66b3')
+@app.before_first_request
+def init():
+    init_db()
 
+@app.teardown_appcontext
+def shutdown_session(exception=None):
+    db_session.remove()
 
 @app.route("/callback", methods=['POST'])
 def callback():
@@ -37,15 +40,37 @@ def callback():
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
     message_text = str(event.message.text).lower()
+    user_id = event.source.user_id
+
+    user = User.query.filter(User.id == user_id).first()
+    if not user:
+        user = User(id=user_id)
+        db_session.add(user)
+        db_session.commit()
 
     if message_text == '@aboutus':
-        about_us_text = '我們是Line Salon，提供專業與尊榮的服務，敬請多多指教!'
-        about_us_image = 'https://i.imgur.com/hyhgryf.jpg'
-        line_bot_api.reply_message(
-            event.reply_token,
-            [TextSendMessage(text=about_us_text),
-             ImageSendMessage(original_content_url=about_us_image, preview_image_url=about_us_image),
-             StickerSendMessage(package_id=2, sticker_id=28)])
+        about_us_event(event)
+
+    elif message_text == '@location':
+        location_event(event)
+
+    elif message_text == '@contact':
+        contact_event(event)
+
+    elif message_text == '@booknow':
+        appointment_event(event)
+
+
+@handler.add(PostbackEvent)
+def handle_postback(event):
+    data = dict(parse_qsl(event.postback.data))
+
+    if data.get('action') == 'step2':
+        appointment_datetime_event(event)
+    if data.get('action') == 'step3':
+        appointment_completed_event(event)
+
+
 
 #主程式
 import os
